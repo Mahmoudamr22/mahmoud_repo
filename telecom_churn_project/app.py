@@ -8,18 +8,34 @@ app.py
 (الناتجة من train_model.py)
 """
 
+import os
 import pandas as pd
 import joblib
 import streamlit as st
 
 st.set_page_config(page_title="Customer Churn Predictor", page_icon="📉", layout="centered")
 
+# مجلد السكريبت نفسه، عشان الملفات تتلاقي مهما كان مكان تشغيل الأمر
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(BASE_DIR, "churn_model.pkl")
+SCALER_PATH = os.path.join(BASE_DIR, "scaler.pkl")
+FEATURES_PATH = os.path.join(BASE_DIR, "feature_columns.pkl")
+
 
 @st.cache_resource
 def load_artifacts():
-    model = joblib.load("churn_model.pkl")
-    scaler = joblib.load("scaler.pkl")
-    feature_columns = joblib.load("feature_columns.pkl")
+    missing = [p for p in [MODEL_PATH, SCALER_PATH, FEATURES_PATH] if not os.path.exists(p)]
+    if missing:
+        st.error(
+            "❌ الملفات دي مش موجودة جنب app.py:\n\n"
+            + "\n".join(f"- {os.path.basename(p)}" for p in missing)
+            + "\n\nشغّل train_model.py الأول (لازم يكون معاه telecom_churn_data.csv "
+              "في نفس الفولدر) عشان ينتج الملفات دي، أو تأكد إنك حاططهم في نفس فولدر app.py."
+        )
+        st.stop()
+    model = joblib.load(MODEL_PATH)
+    scaler = joblib.load(SCALER_PATH)
+    feature_columns = joblib.load(FEATURES_PATH)
     return model, scaler, feature_columns
 
 
